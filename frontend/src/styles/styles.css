@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Corben&family=Dosis:wght@600&family=Montserrat&family=Open+Sans:wght@500&family=Poppins&family=Roboto&display=swap');
+:root {
+    --background: rgb(128,128,128);
+    --btnBackground: rgb(64, 134, 91);
+}
+*,*::before,*::after {
+    padding: 0;
+    border: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background);
+    font-family: 'Dosis', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+}
+.identificationButtons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+}
+.btn {
+    background-color: var(--btnBackground);
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+/* ---- Login ---- */
+.modalWrapper {
+    position: fixed;
+    top: 32px;
+    left:50%;
+    transform: translateX(-50%);
+}
+.modalInner {
+    background-color: whitesmoke;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+}
+.backdrop {
+    position: fixed;
+    top:0;
+    left: 0;
+    width: 200vw;
+    height: 200vh;
+    background-color: rgba(128,128,128,0.3);
+    z-index: -1;
+}
