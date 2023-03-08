@@ -2,7 +2,7 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const {db, User} = require('./connect');
+const {db, User, Blogpost} = require('./connect');
 require('./passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -35,47 +35,71 @@ app.use(passport.session());
 
 
 //Routes
-app.get('/blogs', getToken, async (req, res) => {
-    jwt.verify(req.token, key, (err, authData) => {
-        if(err)res.json({error:err});
-        else {
-            res.json(authData);
-            //Send the blog posts
-        }
+
+// app.get('/blogs', getToken, async (req, res) => {
+//     jwt.verify(req.token, key, (err, authData) => {
+//         if(err)res.json({error:err});
+//         else {
+//             res.json(authData);
+//             //Send the blog posts
+//         }
+//     });
+// });
+app.get('/blog', (req, res, next) => {
+    Blogpost.find()
+    .then(blogs=> {
+        res.json(blogs);
+    })
+    .catch(e=> {
+        console.log('error getting blogs: ', e);
     });
 });
+app.post('/blog', getToken, checkToken,(req, res, next) => {
+    const blogpost = new Blogpost({
+        email: req.body.email,
+        author: req.body.author,
+        title: req.body.title,
+        text: req.body.text,
+        publish: req.body.publish,
+        timestamp: new Date(),
+    }).save()
+    .then(data=> {
+        console.log('data after post: ', data);
+        res.json({message: "success"});
+    })
+    .catch(e=> {
+        console.error('error in Blogpost: ', e);
+    });
+
+    // res.json({message: 'hh'});
+});
+
 app.post('/signup', checkSignup, createToken, (req, res) => {
     console.log('after signup, token: ', req.token);
 });
-// app.post('/login', checkSignup, createToken, (req, res) => {
-//     jwt.sign({user: user}, key, {expiresIn: '10 days'}, (err, token) => {
-//         res.json({token: token});
-//     });
-// });
 
-// app.post('/login', (req,res) => {
-//     console.log('login demanded');
-// });
 app.get('/login', getToken, (req,res)=> {
     jwt.verify(req.token, key, (err, authData) => {
         if(err)res.json({error:err});
         else {
-            req.session.user=req.user;
-            res.json(authData);
+            req.session.user=authData.user;
+            delete authData.user.password
+            res.json(authData.user);
         }
     });
 });
 app.get('/auth/google/callback', (req, res) => {
     console.log('got a req after google auth');
 });
+app.get('/loginError', (req, res) => {
+    console.log('login error');
+    res.json({error: "Login unsuccessful"});
+});
 app.post('/login', handleLogin, passport.authenticate('local', {
-    // failureRedirect: '/oops',
+    failureRedirect: '/loginError',
     failureMessage: true,
     }),
     (req, res, next) => {
-        console.log('in login request');
-        // req.session.user=req.user;
-        // res.redirect('/');
         jwt.sign({user: req.user}, key, {expiresIn: '10 days'}, (err, token) => {
             res.json({token: token});
         });
@@ -90,14 +114,20 @@ app.get('/auth/google/callback', passport.authenticate( 'google', {
    failureRedirect: '/login'
 }));
 app.get('/dashboard', checkAuthenticated, (req, res) => {
-    console.log('in dashboard get');
+    
 });
 
 //----Helper functions
+function checkToken(req, res, next) {
+    jwt.verify(req.token, key, (err, authData) => {
+        if(err)res.json({error:err});
+        next();
+    });
+}
 
 function checkAuthenticated(req,res,next) {
     if(req.isAuthenticated())next();
-    console.log('not authenticated');
+    
 }
 
 function getToken(req, res, next) {
@@ -112,18 +142,16 @@ function getToken(req, res, next) {
 }
 
 function handleLogin(req, res, next) {
-    req.body.username=req.body.email;
-    console.log('body: ', req.body);
-    
+    req.body.username=req.body.email;    
     next();
 }
 
-
 async function checkSignup(req, res, next) {
-    console.log('body: ', req.body);
     const isTaken = await User.findOne({username: req.body.email}).exec();
     if(isTaken) {
-        res.json({error: "email already in use"});
+        res.json({
+            emailTaken: true,
+        });
     } else {
         bcrypt.hash(req.body.password, 10, async (err, hashed) => {
             if(err) {
@@ -131,17 +159,17 @@ async function checkSignup(req, res, next) {
                 return next(err);
             }
             const user = new User({
-                firstname: req.body.firstname,
-                lastname: req.body.lastname,
-                username: req.body.email,
+                email: req.body.email,
+                username: req.body.username,
                 password: hashed,
                 admin: false,
             }).save()
             .then(user=> {
-                console.log('user after signup: ', user);
-                // req.session.user=user;
                 req.user=user;
                 next();
+            })
+            .catch(e=> {
+                res.json({error: "Wrong format"});
             });
         });            
         }
@@ -168,7 +196,8 @@ app.use((err, req, res, next) => {
 
     // render the error page
     res.status(err.status || 500);
-    res.render('error');
+    res.json({error: err});
+    // res.render('error');
 });
 //----
 module.exports = app;

@@ -13,10 +13,21 @@ const User = mongoose.model(
     new Schema({
       username: { type: String, required: true },
       password: { type: String, required: true },
-      firstname: { type: String, required: true },
-      lastname: { type: String, required: true },
+      email: { type: String, required: true },
       admin: { type: Boolean, required: true },
     })
-  );
+);
 
-module.exports = {db, User};
+const Blogpost = mongoose.model(
+    "Blogpost",
+    new Schema({
+        author: { type: String, required: true },
+        title: { type: String, required: true },
+        email: { type: String, required: true },
+        text: { type: String, required: true },
+        publish: { type: Boolean, required: true },
+        timestamp: { type: Date, required: true },
+    })
+);
+
+module.exports = {db, User, Blogpost};

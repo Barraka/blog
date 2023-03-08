@@ -47,14 +47,106 @@ body {
     align-items: center;
     flex-direction: column;
     gap: 16px;
-    padding: 16px;
+    padding: 32px 16px;
+    position: relative;
+    border-radius: 8px;
 }
 .backdrop {
     position: fixed;
-    top:0;
-    left: 0;
+    top:-50%;
+    left: -50%;
     width: 200vw;
     height: 200vh;
     background-color: rgba(128,128,128,0.3);
+    /* background-color: red; */
     z-index: -1;
+}
+.emailWrapper {
+    position: absolute;
+    top:0;
+    background-color: whitesmoke;
+    border-radius: 8px;
+}
+.emailForm {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 32px;
+    padding: 16px 8px;
+}
+
+.inputGroup {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap:8px;
+}
+.inputGroup label {
+    font-size: 1.3rem;
+}
+.inputGroup input{
+    font-size: 1.2rem;
+    text-align: center;
+}
+.errorWrapper {
+    position: absolute;
+    top:0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: whitesmoke;
+    text-align: center;
+    gap: 32px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+}
+.closeBtn {
+    position:absolute;
+    top:5px;
+    right:5px;
+    cursor: pointer;
+}
+.closeBtn:hover svg {
+    fill:red;
+}
+
+/* ---- Signup form ---- */
+.form {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex-direction: column;
+    padding: 64px 16px;
+    gap: 16px;
+    text-align: center;
+}
+.form * {
+    text-align: center;
+    font-size: 1.1rem;
+}
+.formGroup {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+}
+.formGroup input {
+    font-size: 1.1rem;
+    border:2px solid darkgray;
+    border-radius: 6px;
+    text-align: center;
+}
+.btnSubmit {
+    margin-top: 32px;
+}
+.blogWrapper {
+    outline: 1px solid red;
 }

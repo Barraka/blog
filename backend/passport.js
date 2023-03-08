@@ -17,7 +17,7 @@ let authUser = (request, accessToken, refreshToken, profile, done) => {
 //Passport config
 passport.use(
     new LocalStrategy((username, password, callback) => {
-        User.findOne({username: username})
+        User.findOne({email: username})
         .then(user => {
             if(!user) {
                 return callback(null, false, {message: "Incorrect username" });
