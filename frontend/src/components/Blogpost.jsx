@@ -7,10 +7,18 @@ function Blogpost(props) {
     const refTitle=useRef(null);
     const refText=useRef(null);
     const refPublish=useRef(null);
+    const [title, setTitle] = useState(props.title ? props.title : "");
+    const [text, setText] = useState(props.text ? props.text : "");
+
+    useEffect(()=>{
+        setTitle(props.data.title);
+        setText(props.data.text);
+    },[props]);
+
+
     function pushPost(e) {
         e.preventDefault();
         const currentToken = 'bearer '+props.token;
-
         const postBody = {
             title: refTitle.current.value,
             text: refText.current.value,
@@ -23,13 +31,45 @@ function Blogpost(props) {
             method:"POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization":currentToken 
+                "authorization":currentToken 
             },
             body: JSON.stringify(postBody),
         })
         .then(res => res.json())
         .then(data => {
             console.log('data after fetch: ', data);
+            props.setBlogs(data);
+        })
+        .catch(e=> {
+            console.log('error posting blog post: ', e);
+        });
+        props.close();
+    }
+
+    function submitEdit(e) {
+        e.preventDefault();
+        const currentToken = 'bearer '+props.token;
+        const postBody = {
+            title: title,
+            text: text,
+            author: props.data.author,
+            email: props.data.email,
+            publish: props.publish,
+            _id: props.data._id,
+            email: props.data.email,
+        }
+        fetch(host+'/updateBlog', {
+            method:"POST",
+            headers: {
+                "Content-Type": "application/json",
+                "authorization":currentToken 
+            },
+            body: JSON.stringify(postBody),
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('data after update: ', data);
+            // props.setBlogs(data);
         })
         .catch(e=> {
             console.log('error posting blog post: ', e);
@@ -45,12 +85,15 @@ function Blogpost(props) {
                 </div>
                 <form className='form blogForm'>
                     {/* <label htmlFor="blogtitle">Title:</label> */}
-                    <input ref={refTitle} type="text" name="blogtitle" placeholder='Blog Title'/>
-                    <textarea ref={refText} name="blogtext" cols="30" rows="10" placeholder='Something interesting to share...'></textarea>
-                    <label htmlFor="publish">Publish now?</label>
-                    <input ref={refPublish} onChange={e=>setValPublish(prev=>prev==='on' ? false: true)} type="checkbox" name="publish" checked={valPublish} />
-                    <button className='btn' onClick={pushPost}>Submit</button>
+                    <input onChange={e=>setTitle(e.target.value)} ref={refTitle} type="text" name="blogtitle" placeholder='Blog Title' value={title}/>
+                    <textarea onChange={e=>setText(e.target.value)} ref={refText} name="blogtext" cols="30" rows="10" placeholder='Something interesting to share...' value={text}></textarea>
+                    {props.edit ? null : <label htmlFor="publish">Publish now?</label>}
+                    {props.edit ? null : <input type="checkbox" ref={refPublish} onChange={e=>setValPublish(!valPublish)} name="publish" defaultChecked={valPublish} />}
+                    {props.edit ? null : <button className='btn' onClick={pushPost}>Submit</button>}
+                    
                 </form>
+                {props.edit ? <button className='btnPublish' onClick={submitEdit}>Submit</button> : null}
+                {props.edit ? <button className='btnDelete'>Delete</button> : null}
             </div>
             <div className="backdrop"></div>
         </div>

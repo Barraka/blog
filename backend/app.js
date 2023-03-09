@@ -33,28 +33,87 @@ app.use(session({ secret: key, store: new MongoStore({
 app.use(passport.initialize());
 app.use(passport.session());
 
+let cacheBlogposts=[];
+let cacheUnpublished=[];
 
 //Routes
 
-// app.get('/blogs', getToken, async (req, res) => {
-//     jwt.verify(req.token, key, (err, authData) => {
-//         if(err)res.json({error:err});
-//         else {
-//             res.json(authData);
-//             //Send the blog posts
-//         }
-//     });
-// });
-app.get('/blog', (req, res, next) => {
-    Blogpost.find()
-    .then(blogs=> {
-        res.json(blogs);
-    })
-    .catch(e=> {
-        console.log('error getting blogs: ', e);
-    });
+function authenticate(req, res, next) {
+    let bearerToken;    
+    const bearerHeader = req.headers['authorization'];    
+    if(bearerHeader)bearerToken = bearerHeader.split(' ')[1];
+    if(bearerToken) {
+        jwt.verify(bearerToken, key, (err, authData) => {
+            if(err) {
+                console.error('error verifying token: ', err);
+            } else {
+                req.user=authData;
+            }
+        });
+    }
+    next();
+}
+app.post('/comment', authenticate, (req, res, next) => {
+    console.log('comment: ', req.body);
 });
+app.post('/updateBlog', authenticate, (req, res, next) => {
+    console.log('req.body: ', req.body);
+});
+app.post('/publish', authenticate, (req, res) => {    
+    if(req.user) {
+        Blogpost.updateOne({_id:req.body._id}, {publish: true, timestamp: new Date()})
+        .then(result => {
+            let tempPublished=[...cacheBlogposts];
+            let tempUnpublished=[...cacheUnpublished];
+            console.log('unpublished before: ', tempUnpublished.length);
+            const index = tempUnpublished.findIndex(x=>x._id.valueOf()===req.body._id);
+            const removed = tempUnpublished.splice(index, 1)[0];
+            removed.timestamp = new Date();
+            removed.publish = true;
+            tempPublished.push(removed);
+            console.log('unpublished after: ', tempUnpublished.length);
+            res.json({
+                published: tempPublished,
+                unpublished: tempUnpublished,   
+            });
+            cacheBlogposts=[...tempPublished];
+            cacheUnpublished=[...tempUnpublished];
+        })
+        .catch(err=> {
+            console.error('error publishing: ', err);
+        });
+    }
+});
+
+app.get('/blog', authenticate, async (req, res) => {
+    if(cacheBlogposts.length)res.json(cacheBlogposts);
+    else {
+        Blogpost.find()
+        .then(blogs=> {
+            let tempPublished=[];
+            let tempUnpublished=[];
+            blogs.forEach(x=> {
+                if(x.publish===true)tempPublished.push(x)
+                else tempUnpublished.push(x);
+            });
+            cacheBlogposts=[...tempPublished];
+            cacheUnpublished=[...tempUnpublished];
+            res.json(cacheBlogposts);
+        })
+        .catch(e=> {
+            console.error('error getting blogs: ', e);
+        });
+    }
+});
+
+app.get('/unpublished', authenticate, (req, res, next) => {
+    console.log('in unpublished route');
+    if(req.user)res.json(cacheUnpublished);
+    else next(); 
+});
+
 app.post('/blog', getToken, checkToken,(req, res, next) => {
+    
     const blogpost = new Blogpost({
         email: req.body.email,
         author: req.body.author,
@@ -64,14 +123,13 @@ app.post('/blog', getToken, checkToken,(req, res, next) => {
         timestamp: new Date(),
     }).save()
     .then(data=> {
-        console.log('data after post: ', data);
-        res.json({message: "success"});
+        if(data.publish)cacheBlogposts.push(data);
+        else cacheUnpublished.push(data);
+        res.json(cacheBlogposts);
     })
     .catch(e=> {
         console.error('error in Blogpost: ', e);
     });
-
-    // res.json({message: 'hh'});
 });
 
 app.post('/signup', checkSignup, createToken, (req, res) => {
@@ -118,10 +176,33 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 });
 
 //----Helper functions
+async function getBlogPosts() {
+    Blogpost.find()
+    .then(blogs=> {
+        let tempPublished=[];
+        let tempUnpublished=[];
+        blogs.forEach(x=> {
+            if(x.publish===true)tempPublished.push(x)
+            else tempUnpublished.push(x);
+        });
+        cacheBlogposts=[...tempPublished];
+        cacheUnpublished=[...tempUnpublished];
+        // res.json(cacheBlogposts);
+        return tempPublished;
+    })
+    .catch(e=> {
+        console.error('error getting blogs: ', e);
+    });
+}
+
 function checkToken(req, res, next) {
+
     jwt.verify(req.token, key, (err, authData) => {
-        if(err)res.json({error:err});
-        next();
+        if(err) {
+            console.error('error verifying token: ', err);
+            res.json({error:err});
+        }
+        else next();
     });
 }
 
@@ -131,11 +212,15 @@ function checkAuthenticated(req,res,next) {
 }
 
 function getToken(req, res, next) {
-    const bearerHeader = req.headers['authorization'];
+    const bearerHeader = req.headers['authorization'];    
     if(bearerHeader) {
         const bearerToken = bearerHeader.split(' ')[1];
-        req.token = bearerToken;
-        next();
+        
+        if(bearerToken!=='undefined') {
+            req.token = bearerToken;
+            next();
+        }
+        // next();
     } else {
         res.json({error: "no token found"});
     }
@@ -181,9 +266,6 @@ function createToken(req, res, next) {
  }); 
 }
 
-
-
-
 //----------------------------------------------
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -197,7 +279,6 @@ app.use((err, req, res, next) => {
     // render the error page
     res.status(err.status || 500);
     res.json({error: err});
-    // res.render('error');
 });
 //----
 module.exports = app;
