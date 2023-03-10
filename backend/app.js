@@ -2,7 +2,7 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const {db, User, Blogpost} = require('./connect');
+const {db, User, Blogpost, Comment} = require('./connect');
 require('./passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -53,9 +53,42 @@ function authenticate(req, res, next) {
     }
     next();
 }
-app.post('/comment', authenticate, (req, res, next) => {
-    console.log('comment: ', req.body);
+app.delete('/comment/:id', authenticate, (req, res, next) => {
+    const thisid = req.params.id;
+    console.log('getting delete for: ', thisid);
+    Comment.deleteOne({_id:thisid})
+    .then(result=>res.sendStatus(200))
+    .catch(err=>console.error('error deleting comment: ', err));
 });
+app.post('/comment', authenticate, (req, res, next) => {
+    if(req.user) {
+        new Comment({
+            author: req.body.author,
+            comment: req.body.comment,
+            blogId: req.body.blogId,
+            timestamp: new Date(),
+        }).save()
+        .then(data=> {
+            res.sendStatus(200);
+        })
+        .catch(e=> {
+            console.error('error in Comment: ', e);
+        });
+    }
+});
+
+app.get('/comment', authenticate, (req, res, next) => {
+    if(req.user) {
+        Comment.find()
+        .then(data=> {
+            res.json(data);
+        })
+        .catch(e=> {
+            console.error('error in Comment: ', e);
+        });
+    }
+});
+
 app.post('/updateBlog', authenticate, (req, res, next) => {
     console.log('req.body: ', req.body);
 });

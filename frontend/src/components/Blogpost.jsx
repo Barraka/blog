@@ -56,7 +56,6 @@ function Blogpost(props) {
             email: props.data.email,
             publish: props.publish,
             _id: props.data._id,
-            email: props.data.email,
         }
         fetch(host+'/updateBlog', {
             method:"POST",

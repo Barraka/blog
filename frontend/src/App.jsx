@@ -12,6 +12,10 @@ function App() {
     const [token, setToken] = useState(undefined);
     const [blogs, setBlogs] = useState(null);
     const [viewUnpublished, setViewUnpublished] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [postComments, setPostComments] = useState([]);
+
+    
 
     useEffect(()=>{
         const localToken = localStorage.getItem("token");
@@ -28,15 +32,43 @@ function App() {
         if(token) {
             handletoken(token);
             getBlogs(token);
+            getComments(token);
         }
     },[token]);
 
-    useEffect(()=>{
-        console.log('in use effect blogs: ', blogs);
-    },[blogs]);
+    //-------------------
+    function debugComment() {
+        console.log('postComments: ', postComments);
+    }
+    function deleteComment(thisid) {
+        // const tempComments = postComments.filter(x=>x._id!==thisid);
+        console.log('thisid: ', thisid);
+        let tempComments=[...postComments];
+        const index = tempComments.findIndex(x=>x._id===thisid);
+        // tempComments.splice(index, 1);
+        tempComments = tempComments.filter(x=>x._id!==thisid);
+        console.log('after deletion: ', tempComments);
+        setPostComments([...tempComments]);
+        
+    }
+    function addComment(c) {
+        // console.log('before adding: ', postComments);
+        const newcomments=[c, ...postComments];
+        setPostComments(newcomments);
+        console.log('after adding: ', newcomments);
+    }
+    //--------------------------------
+
+    function handleDeleteComment(id) {        
+        const tempC=[...comments].filter(x=>x._id!==id);
+        setComments(tempC);
+    }
+    function handleAddComment(c) {        
+        const tempC=[c,...comments];
+        setComments(tempC);
+    }
 
     function getBlogs(token) {
-        console.log('token in getblogs: ', token);
         const currentToken = 'Bearer '+token;
         if(token!==undefined) {
             fetch(host+'/blog', {
@@ -47,9 +79,28 @@ function App() {
             .then(res=>res.json())
             .then(data=> {
                 setBlogs(data);
-            });
-        }
-        
+            })
+            .catch(err=>console.error('Error getting blogs: ', err));
+        }        
+    };
+
+    function getComments(token) {    
+        console.log('getting comments');    
+        const currentToken = 'Bearer '+token;
+        if(token!==undefined) {
+            fetch(host+'/comment', {
+                headers: {
+                    "authorization":currentToken 
+                },
+            })
+            .then(res=>res.json())
+            .then(data=> {
+                console.log('got comments: ', data);
+                setComments(data.reverse());
+                setPostComments(data.reverse());
+            })
+            .catch(err=>console.error('Error getting comments: ', err));
+        }        
     };
 
     function handletoken(localToken) {
@@ -74,7 +125,7 @@ function App() {
         setOutput(<Signup close={close} setToken={setToken}/>);
     }
     function debug() {
-        console.log('blogs: ', token);
+        console.log('postComments: ', postComments);
     }
     function close() {
         setOutput(null);
@@ -143,11 +194,12 @@ function App() {
         </div>
 
         <button className='btn' onClick={debug}>Debug</button>
+
         {user?.admin ? <button className='btn' onClick={newblog}>New blog post</button>: null}
         {user?.admin ? <button className='btn' onClick={toggleViewType}>{viewUnpublished ? "View published" : "View unpublished"}</button>: null}
 
         <main className='main'>            
-            {blogs ? blogs.map((x, i)=> <Blog token={token} user={user} setOutput={setOutput} publishBlog={publishBlog} key={i} data={x} />): null}
+            {blogs ? blogs.map((x, i)=> <Blog postComments={postComments} setPostComments={setPostComments} addComment={addComment} deleteComment={deleteComment} handleAddComment={handleAddComment} handleDeleteComment={handleDeleteComment} comments={comments} setComments={setComments} getComments={getComments} token={token} user={user} setOutput={setOutput} publishBlog={publishBlog} key={i} data={x} />): null}
         </main>
         {output}
         

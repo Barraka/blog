@@ -30,4 +30,14 @@ const Blogpost = mongoose.model(
     })
 );
 
-module.exports = {db, User, Blogpost};
+const Comment = mongoose.model(
+    "Comment", 
+    new Schema({
+        author: { type: String, required: true },
+        comment: { type: String, required: true },
+        blogId: { type: String, required: true },
+        timestamp: { type: Date, required: true },
+    })
+);
+
+module.exports = {db, User, Blogpost, Comment};
