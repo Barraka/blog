@@ -3,6 +3,16 @@
     --background: rgb(128,128,128);
     --btnBackground: rgb(64, 134, 91);
     --palette1: rgb(87, 129, 139);
+    --palette2: #324B50;
+    --palette3: #95B0B6;
+    --palette4: #82768F;
+    --palette5: #51455C;
+    --palette6: #51455C;
+    --palette7: #82768F;
+    --palette8: #B1A8B9;
+    --palette9: #dcd4e4;
+    --palette10: #1f122e;
+    --textDark: #11061b;
 }
 *,*::before,*::after {
     padding: 0;
@@ -19,6 +29,10 @@ body {
     flex-direction: column;
     text-align: center;
 }
+textarea {
+    font: inherit;
+    padding: 4px;
+}
 .identificationButtons {
     display: flex;
     justify-content: center;
@@ -26,12 +40,13 @@ body {
     gap: 32px;
 }
 .btn {
-    background-color: var(--btnBackground);
-    padding: 8px 16px;
+    background-color: var(--palette5);
+    padding: 4px 12px;
     border-radius: 8px;
     border: 2px solid transparent;
     font-size: 1.4rem;
     cursor: pointer;
+    color: snow;
 }
 
 /* ---- Login ---- */
@@ -151,14 +166,27 @@ body {
 /* ---- Blog---- */
 .main {
     display: flex;
-    justify-content: center;
-    align-items: stretch;
+    /* justify-content: center; */
+    /* align-items: stretch; */
     flex-direction: column;
-    gap: 16px;
+    gap: 64px;
     padding-top: 24px;
+    color: var(--textDark);
+    background-color: var(--palette7);
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 12px;
+    border-radius: 8px;
+}
+.blogButtons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin: 16px 0;
 }
 .blogWrapper {
-    background-color: antiquewhite;
+    background-color: var(--palette9);
     border-radius: 8px;
     padding: 8px 8px 4px;
     display: flex;
@@ -166,8 +194,8 @@ body {
     align-items: stretch;
     flex-direction: column;
     gap:8px;
-    min-width: 200px;
-    max-width: 500px;
+    /* min-width: 200px; */
+    /* max-width: 500px; */
 }
 .blogInfo {
     display: flex;
@@ -180,8 +208,11 @@ body {
 }   
 .blogTitle {
     font-size: 1.1rem;
-    border: 2px solid black;
     border-radius: 8px;
+    align-self: center;
+    padding: 2px 16px;
+    background-color: var(--palette2);
+    color: snow;
 }
 .btnPublish {
     font-size: 1rem;
@@ -209,11 +240,30 @@ body {
 .editItem:hover svg {
     fill: red;
 }
-.commentWrapper {
+.commentToggle {
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
 }
-.commentWrapper:hover svg {
-    fill: var(--btnBackground);
+.commentToggle:hover svg {
+    fill: var(--palette2);
+}
+/* ---- Comments ---- */
+.commentBody {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px;
+    
+}
+.acommentWrapper {
+    background-color: var(--palette8);
+    padding: 4px;
+    border-radius: 8px;
 }
 .commentInput {
     display: flex;
@@ -221,9 +271,48 @@ body {
     align-items: center;
     gap: 8px
 }
+.commentHeader {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: var(--palette6);
+    border-radius: 8px;
+    color: snow;
+}
 .btnComment {
     padding: 6px;
     border-radius: 8px;
     border: 2px solid transparent;
     font-family: inherit;
+}
+
+/* ---- Navbar ---- */
+.navbar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100vw;
+    background-color: var(--palette8);
+    padding: 8px 0;
+}
+.logoWrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80px;
+}
+.logowrapper img {
+    /* width: 100%; */
+    height: 100%;
+    width: auto;
+}
+.user {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: var(--palette10);
+    fill:var(--palette10);
 }

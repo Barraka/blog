@@ -28,10 +28,10 @@ function Signup(props) {
         .then(res => res.json())
         .then(data=> {
             if(data.emailTaken)setOutput(<ErrorModal close={closeError} text="Email already in use" />);
-            if(data.error)alert("Error in form submission");   
+            if(data.error)setOutput(<ErrorModal close={closeError} text="Error in form submission" />);  
             else {
                 localStorage.setItem("token",data.token);
-                props.setToken(data.token);
+                props.handletoken(data.token);
                 props.close();
             }
         });

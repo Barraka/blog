@@ -27,9 +27,8 @@ function Email(props) {
         .then(data=> {
             if(data.error)setOutput(<ErrorModal close={props.close} text="An error occured. Please try again"/>);
             else {
-                console.log('data after login: ', data);
                 localStorage.setItem("token", data.token);
-                props.setToken(data.token);
+                props.handletoken(data.token);
                 props.close();
             }
         });

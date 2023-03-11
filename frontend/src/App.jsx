@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Blog from './components/Blog';
 import Blogpost from './components/Blogpost';
 import Login from './components/Login';
+import Navbar from './components/Navbar';
 import Signup from './components/Signup';
 import './styles/styles.css'
 const host='http://localhost:3000';
@@ -12,64 +13,39 @@ function App() {
     const [token, setToken] = useState(undefined);
     const [blogs, setBlogs] = useState(null);
     const [viewUnpublished, setViewUnpublished] = useState(false);
-    const [comments, setComments] = useState([]);
     const [postComments, setPostComments] = useState([]);
-
-    
 
     useEffect(()=>{
         const localToken = localStorage.getItem("token");
         if(localToken)handletoken(localToken);
+        getBlogs(token);
+        getComments(token);
         
     },[]);
 
-    useEffect(()=>{
-    
-    },[user]);
-
-    useEffect(()=>{
-        console.log('new token: ', token);
-        if(token) {
-            handletoken(token);
-            getBlogs(token);
-            getComments(token);
-        }
-    },[token]);
-
     //-------------------
-    function debugComment() {
-        console.log('postComments: ', postComments);
-    }
+
     function deleteComment(thisid) {
-        // const tempComments = postComments.filter(x=>x._id!==thisid);
-        console.log('thisid: ', thisid);
         let tempComments=[...postComments];
         const index = tempComments.findIndex(x=>x._id===thisid);
-        // tempComments.splice(index, 1);
-        tempComments = tempComments.filter(x=>x._id!==thisid);
-        console.log('after deletion: ', tempComments);
-        setPostComments([...tempComments]);
-        
+        tempComments.splice(index, 1);
+        setPostComments(tempComments);        
     }
     function addComment(c) {
-        // console.log('before adding: ', postComments);
         const newcomments=[c, ...postComments];
         setPostComments(newcomments);
-        console.log('after adding: ', newcomments);
+    }
+    function deleteBlog(thisid) {
+        let tempBlogs=[...blogs];
+        const index = tempBlogs.findIndex(x=>x._id===thisid);
+        tempBlogs.splice(index, 1);
+        setBlogs(tempBlogs);        
     }
     //--------------------------------
 
-    function handleDeleteComment(id) {        
-        const tempC=[...comments].filter(x=>x._id!==id);
-        setComments(tempC);
-    }
-    function handleAddComment(c) {        
-        const tempC=[c,...comments];
-        setComments(tempC);
-    }
-
-    function getBlogs(token) {
+    function getBlogs(token=undefined) {
         const currentToken = 'Bearer '+token;
+        //With token
         if(token!==undefined) {
             fetch(host+'/blog', {
                 headers: {
@@ -77,16 +53,20 @@ function App() {
                 },
             })
             .then(res=>res.json())
-            .then(data=> {
-                setBlogs(data);
-            })
+            .then(data=>setBlogs(data.reverse()))
             .catch(err=>console.error('Error getting blogs: ', err));
-        }        
+        } else {
+            //Without token
+            fetch(host+'/blog')
+            .then(res=>res.json())
+            .then(data=>setBlogs(data.reverse()))
+            .catch(err=>console.error('Error getting blogs: ', err));
+        }
     };
 
-    function getComments(token) {    
-        console.log('getting comments');    
+    function getComments(token=undefined) {      
         const currentToken = 'Bearer '+token;
+        //With token
         if(token!==undefined) {
             fetch(host+'/comment', {
                 headers: {
@@ -94,13 +74,15 @@ function App() {
                 },
             })
             .then(res=>res.json())
-            .then(data=> {
-                console.log('got comments: ', data);
-                setComments(data.reverse());
-                setPostComments(data.reverse());
-            })
+            .then(data=>setPostComments(data.reverse()))
             .catch(err=>console.error('Error getting comments: ', err));
-        }        
+        } else {
+        //Without token
+            fetch(host+'/comment')
+            .then(res=>res.json())
+            .then(data=>setPostComments(data.reverse()))
+            .catch(err=>console.error('Error getting comments: ', err));
+        }
     };
 
     function handletoken(localToken) {
@@ -112,29 +94,30 @@ function App() {
         })
         .then(res=>res.json())
         .then(data=> {
-            console.log('data after login: ', data);
             setUser(data);
             setToken(localToken);
         });
-    }
-
-    function login() {        
-        setOutput(<Login close={close} setToken={setToken}/>);
-    }
-    function signup() {
-        setOutput(<Signup close={close} setToken={setToken}/>);
-    }
-    function debug() {
-        console.log('postComments: ', postComments);
-    }
-    function close() {
-        setOutput(null);
     }
     function logout() {
         localStorage.removeItem("token");
         setUser(undefined);
         setToken(undefined);
     }
+    function login() {        
+        setOutput(<Login handletoken={handletoken} close={close} setToken={setToken}/>);
+    }
+    function signup() {
+        setOutput(<Signup handletoken={handletoken} close={close} setToken={setToken}/>);
+    }
+
+    
+    function debug() {
+        console.log('user: ', user);
+    }
+    function close() {
+        setOutput(null);
+    }
+    
     function newblog() {
         setOutput(<Blogpost token={token} user={user} close={close} setBlogs={setBlogs}/>);
     }
@@ -185,21 +168,16 @@ function App() {
 
     return (
     <div className="App">
-        <h1>In the blog app</h1>
-        {user ?<h3>You are signed in as {user.username}</h3> : <h3>You are not signed in</h3>}
-        {user ? <button className='btn' onClick={logout}>Log out</button> : null}
-        <div className="identificationButtons">
-            {!user ? <button className='btn' onClick={signup}>Sign up</button> : null}
-            {!user ? <button className='btn' onClick={login}>Log in</button> : null}
+        <Navbar toggleViewType={toggleViewType} viewUnpublished={viewUnpublished} user={user} logout={logout} login={login} signup={signup} />        
+
+        <div className="blogButtons">
+            {user?.admin ? <button className='btn' onClick={newblog}>New blog post</button>: null}
+            
         </div>
-
-        <button className='btn' onClick={debug}>Debug</button>
-
-        {user?.admin ? <button className='btn' onClick={newblog}>New blog post</button>: null}
-        {user?.admin ? <button className='btn' onClick={toggleViewType}>{viewUnpublished ? "View published" : "View unpublished"}</button>: null}
+        
 
         <main className='main'>            
-            {blogs ? blogs.map((x, i)=> <Blog postComments={postComments} setPostComments={setPostComments} addComment={addComment} deleteComment={deleteComment} handleAddComment={handleAddComment} handleDeleteComment={handleDeleteComment} comments={comments} setComments={setComments} getComments={getComments} token={token} user={user} setOutput={setOutput} publishBlog={publishBlog} key={i} data={x} />): null}
+            {blogs ? blogs.map((x, i)=> <Blog deleteBlog={deleteBlog} postComments={postComments} addComment={addComment} deleteComment={deleteComment} token={token} user={user} setOutput={setOutput} publishBlog={publishBlog} key={i} data={x} />): null}
         </main>
         {output}
         

@@ -53,11 +53,22 @@ function authenticate(req, res, next) {
     }
     next();
 }
+
+app.delete('/blog/:id', authenticate, (req, res, next) => {
+    const thisid = req.params.id;
+    Blogpost.deleteOne({_id:thisid})
+    .then(result=>getBlogPosts(res))
+    .catch(err=>console.error('error deleting comment: ', err));
+});
+
 app.delete('/comment/:id', authenticate, (req, res, next) => {
     const thisid = req.params.id;
     console.log('getting delete for: ', thisid);
     Comment.deleteOne({_id:thisid})
-    .then(result=>res.sendStatus(200))
+    .then(result=> {
+        console.log('delete ok');
+        res.sendStatus(200);
+    })
     .catch(err=>console.error('error deleting comment: ', err));
 });
 app.post('/comment', authenticate, (req, res, next) => {
@@ -67,6 +78,7 @@ app.post('/comment', authenticate, (req, res, next) => {
             comment: req.body.comment,
             blogId: req.body.blogId,
             timestamp: new Date(),
+            _id: req.body._id,
         }).save()
         .then(data=> {
             res.sendStatus(200);
@@ -77,16 +89,14 @@ app.post('/comment', authenticate, (req, res, next) => {
     }
 });
 
-app.get('/comment', authenticate, (req, res, next) => {
-    if(req.user) {
-        Comment.find()
+app.get('/comment', (req, res, next) => {
+    Comment.find()
         .then(data=> {
             res.json(data);
         })
         .catch(e=> {
             console.error('error in Comment: ', e);
         });
-    }
 });
 
 app.post('/updateBlog', authenticate, (req, res, next) => {
@@ -118,29 +128,12 @@ app.post('/publish', authenticate, (req, res) => {
     }
 });
 
-app.get('/blog', authenticate, async (req, res) => {
+app.get('/blog', async (req, res) => {
     if(cacheBlogposts.length)res.json(cacheBlogposts);
-    else {
-        Blogpost.find()
-        .then(blogs=> {
-            let tempPublished=[];
-            let tempUnpublished=[];
-            blogs.forEach(x=> {
-                if(x.publish===true)tempPublished.push(x)
-                else tempUnpublished.push(x);
-            });
-            cacheBlogposts=[...tempPublished];
-            cacheUnpublished=[...tempUnpublished];
-            res.json(cacheBlogposts);
-        })
-        .catch(e=> {
-            console.error('error getting blogs: ', e);
-        });
-    }
+    else getBlogPosts(res);
 });
 
 app.get('/unpublished', authenticate, (req, res, next) => {
-    console.log('in unpublished route');
     if(req.user)res.json(cacheUnpublished);
     else next(); 
 });
@@ -154,10 +147,11 @@ app.post('/blog', getToken, checkToken,(req, res, next) => {
         text: req.body.text,
         publish: req.body.publish,
         timestamp: new Date(),
+        _id: req.body._id,
     }).save()
     .then(data=> {
-        if(data.publish)cacheBlogposts.push(data);
-        else cacheUnpublished.push(data);
+        if(data.publish)cacheBlogposts=[...cacheBlogposts, data];
+        else cacheUnpublished=[...cacheUnpublished, data];
         res.json(cacheBlogposts);
     })
     .catch(e=> {
@@ -183,7 +177,7 @@ app.get('/auth/google/callback', (req, res) => {
     console.log('got a req after google auth');
 });
 app.get('/loginError', (req, res) => {
-    console.log('login error');
+    console.log('login error: ', req.body);
     res.json({error: "Login unsuccessful"});
 });
 app.post('/login', handleLogin, passport.authenticate('local', {
@@ -191,6 +185,7 @@ app.post('/login', handleLogin, passport.authenticate('local', {
     failureMessage: true,
     }),
     (req, res, next) => {
+        console.log('trying to sign');
         jwt.sign({user: req.user}, key, {expiresIn: '10 days'}, (err, token) => {
             res.json({token: token});
         });
@@ -209,7 +204,7 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 });
 
 //----Helper functions
-async function getBlogPosts() {
+function getBlogPosts(res) {
     Blogpost.find()
     .then(blogs=> {
         let tempPublished=[];
@@ -220,8 +215,8 @@ async function getBlogPosts() {
         });
         cacheBlogposts=[...tempPublished];
         cacheUnpublished=[...tempUnpublished];
-        // res.json(cacheBlogposts);
-        return tempPublished;
+        res.json(cacheBlogposts);
+        // return tempPublished;
     })
     .catch(e=> {
         console.error('error getting blogs: ', e);
@@ -260,7 +255,7 @@ function getToken(req, res, next) {
 }
 
 function handleLogin(req, res, next) {
-    req.body.username=req.body.email;    
+    req.body.username=req.body.email;   
     next();
 }
 

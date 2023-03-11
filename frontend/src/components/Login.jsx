@@ -11,7 +11,7 @@ function Login(props) {
     }
     
     function signEmail() {
-        setOutput(<Email close={props.close} setToken={props.setToken}/>);
+        setOutput(<Email handletoken={props.handletoken} close={props.close} setToken={props.setToken}/>);
     }
 
     return (

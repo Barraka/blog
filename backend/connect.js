@@ -27,6 +27,7 @@ const Blogpost = mongoose.model(
         text: { type: String, required: true },
         publish: { type: Boolean, required: true },
         timestamp: { type: Date, required: true },
+        _id: { type: String, required: true },
     })
 );
 
@@ -37,6 +38,7 @@ const Comment = mongoose.model(
         comment: { type: String, required: true },
         blogId: { type: String, required: true },
         timestamp: { type: Date, required: true },
+        _id: { type: String, required: true },
     })
 );
 
