@@ -5,7 +5,8 @@ import Login from './components/Login';
 import Navbar from './components/Navbar';
 import Signup from './components/Signup';
 import './styles/styles.css'
-const host='http://localhost:3000';
+import host from '../host'
+
 
 function App() {
     const [user, setUser] = useState(undefined);
