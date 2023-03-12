@@ -5,7 +5,7 @@ import Login from './components/Login';
 import Navbar from './components/Navbar';
 import Signup from './components/Signup';
 import './styles/styles.css'
-import host from '../host'
+import host from './host'
 
 
 function App() {
