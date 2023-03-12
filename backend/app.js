@@ -24,12 +24,13 @@ app.set('view engine', 'ejs');
 
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173',
+    // origin: 'http://localhost:5173',
+    origin: 'https://bloglife.onrender.com/',
     // origin: true,
-    credentials: true,
-    headers: {
-        "Access-Control-Allow-Origin": "*"
-    }
+    // credentials: true,
+    // headers: {
+    //     "Access-Control-Allow-Origin": "*"
+    // }
 }));
 // app.use(getHeaders);
 app.use(referrerPolicy({ policy: 'no-referrer-when-downgrade' }))
