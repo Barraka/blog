@@ -116,6 +116,7 @@ function Blogpost(props) {
                 </div>
                 <form className='form blogForm'>
                     {/* <label htmlFor="blogtitle">Title:</label> */}
+                    <div className="blogTitle">Title:</div>
                     <input onChange={e=>setTitle(e.target.value)} ref={refTitle} type="text" name="blogtitle" placeholder='Blog Title' value={title}/>
                     <textarea onChange={e=>setText(e.target.value)} ref={refText} name="blogtext" cols="30" rows="10" placeholder='Something interesting to share...' value={text}></textarea>
                     {props.edit ? null : <label htmlFor="publish">Publish now?</label>}

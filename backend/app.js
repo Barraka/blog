@@ -10,6 +10,7 @@ const cors =require('cors');
 const MongoStore = require('connect-mongo');
 const passport = require("passport");
 const session = require("express-session");
+const referrerPolicy = require('referrer-policy')
 
 //Get env variables:
 const key=process.env.SECRETKEY;
@@ -22,7 +23,16 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(express.json());
-app.use(cors({origin: 'http://localhost:5173'}));
+app.use(cors({
+    origin: 'http://localhost:5173',
+    // origin: true,
+    credentials: true,
+    headers: {
+        "Access-Control-Allow-Origin": "*"
+    }
+}));
+// app.use(getHeaders);
+app.use(referrerPolicy({ policy: 'no-referrer-when-downgrade' }))
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,6 +46,17 @@ app.use(passport.session());
 let cacheBlogposts=[];
 let cacheUnpublished=[];
 
+function getHeaders(req, res, next) {
+    req.headers.referer = "no-referrer-when-downgrade";
+    req.headers["Cross-Origin-Opener-Policy"]= "same-origin-allow-popups";
+    req.headers["Access-Control-Allow-Origin"] = "*";
+    req.headers.origin = "*";
+    req.headers["Asec-fetch-mode"] = "no-cors";
+    req.headers={};
+    
+    console.log('header: ', req.headers);
+    next();
+}
 //Routes
 
 function authenticate(req, res, next) {
@@ -173,9 +194,7 @@ app.get('/login', getToken, (req,res)=> {
         }
     });
 });
-app.get('/auth/google/callback', (req, res) => {
-    console.log('got a req after google auth');
-});
+
 app.get('/loginError', (req, res) => {
     console.log('login error: ', req.body);
     res.json({error: "Login unsuccessful"});
@@ -191,14 +210,44 @@ app.post('/login', handleLogin, passport.authenticate('local', {
         });
     }
 );
+function test(req, res, next) {
+    console.log('got a req on auth google');
+    next();
+}
+function googleAuth(req, res, next) {
+    passport.authenticate('google', { scope: [ 'email', 'profile' ]})
+    console.log('in auth, res: ', req.user);
+    next();
+}
+// app.get("/auth/google", googleAuth, (req, res)=>{
+//     console.log('after auth');  
+// });
 
-app.get('/auth/google',
-  passport.authenticate('google', { scope: [ 'email', 'profile' ]
-}));
-app.get('/auth/google/callback', passport.authenticate( 'google', {
-   successRedirect: '/dashboard',
-   failureRedirect: '/login'
-}));
+app.get("/auth/google", passport.authenticate("google", { scope: ["email", "profile"] }));
+
+app.get("/auth/google/callback", passport.authenticate("google", { session: false }), (req, res) => {
+    console.log('in callback');
+    res.send('success');
+});
+app.get("/profile", (req, res) => {
+    console.log("got in profile from google");
+    res.send("Welcome");
+});
+
+// app.get('/auth/google',passport.authenticate('google', { scope: [ 'email', 'profile' ]}), (req, res) => {
+//     // console.log('google res: ', res );
+//     res.sendStatus(200);
+// });
+
+// app.get('/auth/google/callback', test, passport.authenticate( 'google', {
+//    successRedirect: '/dashboard',
+//    failureRedirect: '/login'
+// }));
+
+app.get('/auth/google/callback', (req, res) => {
+    console.log('got a req after google auth');
+});
+
 app.get('/dashboard', checkAuthenticated, (req, res) => {
     
 });

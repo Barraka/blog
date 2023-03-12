@@ -7,7 +7,8 @@ function Login(props) {
     function signGoogle() {
         console.log('trying to sign in with Google:');
         fetch(host+'/auth/google')
-        .then(res => console.log('res: ', res));
+        .then(res => console.log('res: ', res))
+        .catch(err=> console.error('Error with Google sign-in: ', err));
     }
     
     function signEmail() {

@@ -57,7 +57,7 @@ textarea {
     transform: translateX(-50%);
 }
 .modalInner {
-    background-color: whitesmoke;
+    background-color: var(--palette9);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -219,7 +219,9 @@ textarea {
     padding: 8px;
     border-radius: 8px;
     border:2px solid transparent;
-    background-color: aqua;
+    background-color: var(--palette5);
+    color:aliceblue;
+    font-weight: bold;
     cursor: pointer;
 }
 .btnDelete {

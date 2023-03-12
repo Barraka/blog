@@ -6,8 +6,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {db, User} = require('./connect');
 
-const GOOGLE_CLIENT_ID=process.env.GOOGLEID;
-const GOOGLE_CLIENT_SECRET=process.env.GOOGLESECRET;
+const GOOGLE_CLIENT_ID=process.env.GOOGLEID2;
+const GOOGLE_CLIENT_SECRET=process.env.GOOGLESECRET2;
 const HOST=process.env.HOST;
 
 let authUser = (request, accessToken, refreshToken, profile, done) => {
