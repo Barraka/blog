@@ -305,6 +305,11 @@ textarea {
     background-color: var(--palette8);
     padding: 8px 0;
 }
+@media (max-width: 650px) {
+    .navbar {
+        flex-direction: column;
+    }
+}
 .logoWrapper {
     border-radius: 8px;
     overflow: hidden;
