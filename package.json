@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Barraka/blog/issues"
   },
-  "homepage": "https://github.com/Barraka/blog#readme"
+  "homepage": "https://github.com/Barraka/blog#readme",
+  "dependencies": {
+    "mongodb": "^5.1.0"
+  }
 }
