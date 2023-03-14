@@ -2,15 +2,15 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const {db, User, Blogpost, Comment} = require('./connect');
+const {db, User, Blogpost, Comment, getConnection} = require('./connect');
 require('./passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors =require('cors');
 const MongoStore = require('connect-mongo');
+const mongodb = require('mongodb');
 const passport = require("passport");
 const session = require("express-session");
-const referrerPolicy = require('referrer-policy')
 
 //Get env variables:
 const key=process.env.SECRETKEY;
@@ -24,23 +24,17 @@ app.set('view engine', 'ejs');
 
 app.use(express.json());
 app.use(cors({
-    // origin: 'http://localhost:5173',
-    origin: 'https://bloglife.onrender.com',
-    // origin: true,
-    // credentials: true,
-    // headers: {
-    //     "Access-Control-Allow-Origin": "*"
-    // }
+    origin: 'http://localhost:5173',
+    // origin: 'https://bloglife.onrender.com',
 }));
-// app.use(getHeaders);
-app.use(referrerPolicy({ policy: 'no-referrer-when-downgrade' }))
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+// app.use(getHeaders);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({ secret: key, store: new MongoStore({
     mongoUrl: process.env.MONGODB,
     secret: key,
-}), cookie: { maxAge: 864000000 }, rolling: true, resave: true, saveUninitialized: false }));
+}), cookie: { maxAge: 864000000, secure: true }, rolling: true, resave: true, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -48,14 +42,8 @@ let cacheBlogposts=[];
 let cacheUnpublished=[];
 
 function getHeaders(req, res, next) {
-    req.headers.referer = "no-referrer-when-downgrade";
-    req.headers["Cross-Origin-Opener-Policy"]= "same-origin-allow-popups";
-    req.headers["Access-Control-Allow-Origin"] = "*";
-    req.headers.origin = "*";
-    req.headers["Asec-fetch-mode"] = "no-cors";
-    req.headers={};
-    
     console.log('header: ', req.headers);
+    console.log('cookies: ', req.cookies);
     next();
 }
 //Routes
@@ -76,16 +64,31 @@ function authenticate(req, res, next) {
     next();
 }
 
-app.delete('/blog/:id', authenticate, (req, res, next) => {
+app.delete('/blog/:id', authenticate, async (req, res, next) => {
     const thisid = req.params.id;
-    Blogpost.deleteOne({_id:thisid})
-    .then(result=>getBlogPosts(res))
-    .catch(err=>console.error('error deleting comment: ', err));
+    const conresult = await getConnection();
+    let temp = await conresult.collection('blogposts').deleteOne({_id: thisid});
+    if(temp.deletedCount===0) temp = await conresult.collection('blogposts').deleteOne({_id: new mongodb.ObjectId(thisid)});
+    console.log('temp : ', temp);
+    if(temp.deletedCount===1) getBlogPosts();
+    res.sendStatus(200);
+
+    // collection.deleteOne({_id: new mongodb.ObjectId(thisid)}, (err, delresult) => {
+        //     if(err)console.log('failed');
+        //     console.log('delresult: ', delresult);
+        // });
+
+    // Blogpost.deleteOne({_id: thisid})
+    // .then(result=> {
+    //     console.log('getting delete for: ', thisid, ' - result: ', result);
+    //     getBlogPosts(res);
+    // })
+    // .catch(err=>console.error('error deleting comment: ', err));
 });
 
 app.delete('/comment/:id', authenticate, (req, res, next) => {
     const thisid = req.params.id;
-    console.log('getting delete for: ', thisid);
+    
     Comment.deleteOne({_id:thisid})
     .then(result=> {
         console.log('delete ok');
@@ -111,7 +114,7 @@ app.post('/comment', authenticate, (req, res, next) => {
     }
 });
 
-app.get('/comment', (req, res, next) => {
+app.get('/comment', authenticate, (req, res, next) => {
     Comment.find()
         .then(data=> {
             res.json(data);
@@ -150,7 +153,11 @@ app.post('/publish', authenticate, (req, res) => {
     }
 });
 
-app.get('/blog', async (req, res) => {
+app.get('/blog',
+    async (req, res) => {
+    // console.log('user getting blog: ', req.user);
+    // console.log('session user getting blog: ', req.session.user);
+    // console.log('is auth: ', req.isAuthenticated());
     if(cacheBlogposts.length)res.json(cacheBlogposts);
     else getBlogPosts(res);
 });
@@ -220,41 +227,39 @@ function googleAuth(req, res, next) {
     console.log('in auth, res: ', req.user);
     next();
 }
-// app.get("/auth/google", googleAuth, (req, res)=>{
-//     console.log('after auth');  
-// });
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["email", "profile"] }));
 
 app.get("/auth/google/callback", passport.authenticate("google", { session: false }), (req, res) => {
-    console.log('in callback');
-    res.send('success');
+    let temptoken;
+    console.log('in callback, email: ', req.user.email);
+    // console.log('in callback after createtoken, user: ', req.user);
+    const code = req.url.split('code=')[1].split('&scope')[0];
+    jwt.sign({user: req.user.email}, key, {expiresIn: '365 days'}, (err, token) => {
+        if(err)console.log('error in createtoken: ', err);
+        else console.log({token: token});
+        // req.token=token;
+        // req.session.token=token
+        // res.json({temptoken: token});
+
+        //Send cookie for next validation
+        // res.cookie('user', username, {maxAge: 10800}).send('cookie set');
+        res.redirect('http://localhost:5173');
+        
+    });    
 });
 app.get("/profile", (req, res) => {
     console.log("got in profile from google");
     res.send("Welcome");
 });
 
-// app.get('/auth/google',passport.authenticate('google', { scope: [ 'email', 'profile' ]}), (req, res) => {
-//     // console.log('google res: ', res );
-//     res.sendStatus(200);
-// });
-
-// app.get('/auth/google/callback', test, passport.authenticate( 'google', {
-//    successRedirect: '/dashboard',
-//    failureRedirect: '/login'
-// }));
-
-app.get('/auth/google/callback', (req, res) => {
-    console.log('got a req after google auth');
-});
 
 app.get('/dashboard', checkAuthenticated, (req, res) => {
     
 });
 
 //----Helper functions
-function getBlogPosts(res) {
+function getBlogPosts(res=undefined) {
     Blogpost.find()
     .then(blogs=> {
         let tempPublished=[];
@@ -265,7 +270,7 @@ function getBlogPosts(res) {
         });
         cacheBlogposts=[...tempPublished];
         cacheUnpublished=[...tempUnpublished];
-        res.json(cacheBlogposts);
+        if(res)res.json(cacheBlogposts);
         // return tempPublished;
     })
     .catch(e=> {
@@ -318,7 +323,7 @@ async function checkSignup(req, res, next) {
     } else {
         bcrypt.hash(req.body.password, 10, async (err, hashed) => {
             if(err) {
-                console.error('error');
+                console.error('error in checksignup');
                 return next(err);
             }
             const user = new User({
@@ -338,10 +343,11 @@ async function checkSignup(req, res, next) {
         }
 }
 
-function createToken(req, res, next) {
-    jwt.sign({user: req.user}, key, {expiresIn: '10 days'}, (err, token) => {
-        res.json({token: token});
- }); 
+function createToken(req, res, next) {   
+    jwt.sign({user: req.user}, key, {expiresIn: '365 days'}, (err, token) => {
+        if(err)console.error('error in createtoken: ', err);
+        else res.json({token: token});
+    }); 
 }
 
 //----------------------------------------------
@@ -351,12 +357,13 @@ app.use((req, res, next) => {
 });
 app.use((err, req, res, next) => {
     // set locals, only providing error in development
+    console.log('in Errror route at the end');
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
     // render the error page
     res.status(err.status || 500);
-    res.json({error: err});
+    res.json({error404: err});
 });
 //----
 module.exports = app;

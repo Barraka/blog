@@ -42,7 +42,7 @@ function Blogpost(props) {
         .then(res => res.json())
         .then(data => {
             console.log('data after fetch: ', data);
-            props.setBlogs(data);
+            props.setBlogs(data.reverse());
         })
         .catch(e=> {
             console.log('error posting blog post: ', e);

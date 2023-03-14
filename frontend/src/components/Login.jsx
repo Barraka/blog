@@ -6,6 +6,7 @@ function Login(props) {
 
     function signGoogle() {
         console.log('trying to sign in with Google:');
+        window.open(host+'/auth/google', '_blank').focus();
         fetch(host+'/auth/google')
         .then(res => console.log('res: ', res))
         .catch(err=> console.error('Error with Google sign-in: ', err));
@@ -22,6 +23,7 @@ function Login(props) {
                     <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>
                 </div>
                 <button className='btn' onClick={signGoogle}>Login with Google</button>
+                <a href={host+"/auth/google"}>Another link for google</a>
                 <button className='btn' onClick={signEmail}>Login with email</button>
                 {output}
             </div>

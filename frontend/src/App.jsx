@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import Signup from './components/Signup';
 import './styles/styles.css'
 import host from './host'
+import Email from './components/Email';
 
 
 function App() {
@@ -21,8 +22,12 @@ function App() {
         if(localToken)handletoken(localToken);
         getBlogs(token);
         getComments(token);
-        
+        console.log('in app use effect');
     },[]);
+
+    useEffect(()=>{
+        console.log('got blogs: ', blogs);
+    },[blogs]);
 
     //-------------------
 
@@ -105,7 +110,9 @@ function App() {
         setToken(undefined);
     }
     function login() {        
-        setOutput(<Login handletoken={handletoken} close={close} setToken={setToken}/>);
+        // setOutput(<Login handletoken={handletoken} close={close} setToken={setToken}/>);
+        setOutput(<Email handletoken={handletoken} close={close} setToken={setToken}/>);
+
     }
     function signup() {
         setOutput(<Signup handletoken={handletoken} close={close} setToken={setToken}/>);
@@ -178,7 +185,7 @@ function App() {
         
 
         <main className='main'>            
-            {blogs ? blogs.map((x, i)=> <Blog deleteBlog={deleteBlog} postComments={postComments} addComment={addComment} deleteComment={deleteComment} token={token} user={user} setOutput={setOutput} publishBlog={publishBlog} key={i} data={x} />): null}
+            {blogs ? blogs.map((x, i)=> <Blog blogs={blogs} deleteBlog={deleteBlog} postComments={postComments} addComment={addComment} deleteComment={deleteComment} token={token} user={user} setOutput={setOutput} publishBlog={publishBlog} key={i} data={x} />): null}
         </main>
         {output}
         

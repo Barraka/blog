@@ -11,7 +11,14 @@ function Blog(props) {
     useEffect(()=>{
         const temp = props.postComments.filter(x=>x.blogId===props.data._id);
         setComments(temp);
-    },[props.postComments]);
+        console.log('blog id: ', props.data._id);
+    },[props.postComments]); //
+
+    useEffect(()=>{
+        const temp = props.postComments.filter(x=>x.blogId===props.data._id);
+        setComments(temp);
+        console.log('blog id: ', props.data._id);
+    },[props.blogs]);
 
     function publish(e) {
         const id = e.currentTarget.getAttribute('data-id');
@@ -21,13 +28,6 @@ function Blog(props) {
     function editItem(e) {
         props.setOutput(<Blogpost deleteBlog={props.deleteBlog} id={props.data._id} token={props.token} close={()=>props.setOutput(null)} edit={true} data={props.data} />);
     }
-
-    
-
-    // function toggleComments(e) {
-    //     if(!displayComments)setDisplayComments(<Comment postComments={props.postComments} addComment={props.addComment} deleteComment={props.deleteComment} id={props.data._id} user={props.user} token={props.token} data={props.data}/>);
-    //     else setDisplayComments(false);
-    // }
 
     function toggleComments(e) {
         setDisplayComments(!displayComments);

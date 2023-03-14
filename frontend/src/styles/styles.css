@@ -79,7 +79,9 @@ textarea {
 }
 .emailWrapper {
     position: absolute;
-    top:0;
+    top:64px;
+    left:50%;
+    transform: translateX(-50%);
     background-color: whitesmoke;
     border-radius: 8px;
 }
@@ -286,6 +288,12 @@ textarea {
     border-radius: 8px;
     border: 2px solid transparent;
     font-family: inherit;
+}
+.formWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
 }
 
 /* ---- Navbar ---- */

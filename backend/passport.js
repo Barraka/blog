@@ -10,9 +10,7 @@ const GOOGLE_CLIENT_ID=process.env.GOOGLEID2;
 const GOOGLE_CLIENT_SECRET=process.env.GOOGLESECRET2;
 const HOST=process.env.HOST;
 
-let authUser = (request, accessToken, refreshToken, profile, done) => {
-    return done(null, profile);
-  }
+
 
 //Passport config
 passport.use(
@@ -39,22 +37,31 @@ passport.use(
     })
 );
 
+let authUser = (request, accessToken, refreshToken, profile, done) => {
+    console.log('in auth user');
+    return done(null, profile);
+}
+
 passport.use(new GoogleStrategy({
     clientID:     GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
     callbackURL: HOST+"/auth/google/callback",
-    passReqToCallback   : true
+    passReqToCallback   : true,
+    state: true,
+    pkce: true,
     }, authUser),
 );
 
-passport.serializeUser(function(user, cb) {
+
+passport.serializeUser(function(user, callback) {
     process.nextTick(function() {
-        cb(null, {id: user.id, email: user.username, firstname:user.firstname, lastname:user.lastname, admin:user.admin});
+        console.log('serializing');
+        callback(null, {id: user.id, email: user.username, firstname:user.firstname, lastname:user.lastname, admin:user.admin});
     });
 });
 
-passport.deserializeUser(function(user, cb) {
+passport.deserializeUser(function(user, callback) {
     process.nextTick(function() {
-        return cb(null, user);
+        return callback(null, user);
     });
 });

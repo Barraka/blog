@@ -1,9 +1,21 @@
 require('dotenv').config();
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const {MongoClient} = require('mongodb');
+const mongoDb=process.env.MONGODB;
 
 //Mongo connection
-const mongoDb=process.env.MONGODB;
+const client = new MongoClient(mongoDb);
+
+async function getConnection(){
+    await client.connect();
+    const connection = client.db('blog');
+    return connection;
+}
+
+
+//Mongoose connection
+
 mongoose.connect(mongoDb, { useUnifiedTopology: true, useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
@@ -42,4 +54,4 @@ const Comment = mongoose.model(
     })
 );
 
-module.exports = {db, User, Blogpost, Comment};
+module.exports = {db, User, Blogpost, Comment, getConnection};
