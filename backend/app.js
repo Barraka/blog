@@ -14,7 +14,7 @@ const session = require("express-session");
 
 //Get env variables:
 const key=process.env.SECRETKEY;
-const HOST=process.env.HOST;
+const HOST=process.env.HOST;;
 
 
 //Run app
