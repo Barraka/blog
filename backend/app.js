@@ -7,7 +7,7 @@ require('./passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors =require('cors');
-const MongoStore = require('connect-mongo');
+// const MongoStore = require('connect-mongo');
 const mongodb = require('mongodb');
 const passport = require("passport");
 const session = require("express-session");
@@ -32,10 +32,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // app.use(getHeaders);
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({ secret: key, store: new MongoStore({
-    mongoUrl: process.env.MONGODB,
-    secret: key,
-}), cookie: { maxAge: 864000000, secure: true }, rolling: true, resave: true, saveUninitialized: false }));
+// app.use(session({ secret: key, store: new MongoStore({
+//     mongoUrl: process.env.MONGODB,
+//     secret: key,
+// }), cookie: { maxAge: 864000000, secure: true }, rolling: true, resave: true, saveUninitialized: false }));
+
+app.use(session({ secret: key, cookie: { maxAge: 864000000, secure: true }, rolling: true, resave: true, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
 
