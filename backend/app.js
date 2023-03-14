@@ -24,8 +24,8 @@ app.set('view engine', 'ejs');
 
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173',
-    // origin: 'https://bloglife.onrender.com',
+    // origin: 'http://localhost:5173',
+    origin: 'https://bloglife.onrender.com',
 }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -244,7 +244,8 @@ app.get("/auth/google/callback", passport.authenticate("google", { session: fals
 
         //Send cookie for next validation
         // res.cookie('user', username, {maxAge: 10800}).send('cookie set');
-        res.redirect('http://localhost:5173');
+        // res.redirect('http://localhost:5173');
+        res.redirect('https://bloglife.onrender.com');
         
     });    
 });
